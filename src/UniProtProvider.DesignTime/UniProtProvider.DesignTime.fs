@@ -106,6 +106,8 @@ type UniProtProvider (config : TypeProviderConfig) as this =
 
     let ns = "UniProtDemo"
     let asm = Assembly.GetExecutingAssembly()
+    let mutable count = 0
+    let nextNumber() = count <- count + 1; count
 
     // check we contain a copy of runtime files, and are not referencing the runtime DLL
     do assert (typeof<DataSource>.Assembly.GetName().Name = asm.GetName().Name)  
@@ -114,8 +116,10 @@ type UniProtProvider (config : TypeProviderConfig) as this =
         let myType = ProvidedTypeDefinition(asm, ns, "Static", Some typeof<obj>)
         let staticMeth = ProvidedMethod("Test", [], typeof<obj>, isStatic=true)
         staticMeth.DefineStaticParameters([ProvidedStaticParameter("input", typeof<string>)], fun methName args ->
+          let t = ProvidedTypeDefinition("Hidden" + string (nextNumber()), Some typeof<obj>)
+          myType.AddMember(t)
           let s = args.[0] :?> string
-          let m = ProvidedMethod(methName, [], typeof<string>, isStatic=true, invokeCode = fun _ -> <@@ s @@>)
+          let m = ProvidedMethod(methName, [], t, isStatic=true, invokeCode = fun _ -> <@@ s @@>)
           myType.AddMember(m)
           m
         )
