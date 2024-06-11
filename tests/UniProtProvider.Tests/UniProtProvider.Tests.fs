@@ -35,8 +35,8 @@ let ``Can access properties of generative provider 4`` () =
 
 [<Test>]
 let ``Can use static method properly`` () =
-  let res1 = UniProtDemo.Static.Test<"hi">()
-  let res2 = UniProtDemo.Static.Test<"there">()
-  Assert.That(res1, Is.EqualTo("hi"))
-  Assert.That(res2, Is.EqualTo("there"))
-
+  let upd = new UniProtDemo.Erased()
+  let res1 = upd.Test<"Hello">()
+  let res2 = upd.Test<"There">()
+  Assert.That(res1.Hello, Is.EqualTo("Hello"))
+  Assert.That(res2.There, Is.EqualTo("There"))

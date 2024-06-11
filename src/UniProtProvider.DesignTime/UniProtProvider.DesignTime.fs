@@ -113,13 +113,17 @@ type UniProtProvider (config : TypeProviderConfig) as this =
     do assert (typeof<DataSource>.Assembly.GetName().Name = asm.GetName().Name)  
 
     let createTypes () =
-        let myType = ProvidedTypeDefinition(asm, ns, "Static", Some typeof<obj>)
-        let staticMeth = ProvidedMethod("Test", [], typeof<obj>, isStatic=true)
+        let myType = ProvidedTypeDefinition(asm, ns, "Erased", Some typeof<obj>)
+        myType.AddMember(ProvidedConstructor([], fun _ -> <@@ obj() @@>))
+        let staticMeth = ProvidedMethod("Test", [], typeof<obj>)
         staticMeth.DefineStaticParameters([ProvidedStaticParameter("input", typeof<string>)], fun methName args ->
-          let t = ProvidedTypeDefinition("Hidden" + string (nextNumber()), Some typeof<obj>)
-          myType.AddMember(t)
           let s = args.[0] :?> string
-          let m = ProvidedMethod(methName, [], t, isStatic=true, invokeCode = fun _ -> <@@ s @@>)
+
+          let t = ProvidedTypeDefinition("Hidden" + string (nextNumber()), Some typeof<obj>)
+          t.AddMember(ProvidedProperty(s, typeof<string>, getterCode=fun _ -> <@@ s @@>))
+          myType.AddMember(t)
+
+          let m = ProvidedMethod(methName, [], t, invokeCode = fun _ -> <@@ obj() @@>)
           myType.AddMember(m)
           m
         )
