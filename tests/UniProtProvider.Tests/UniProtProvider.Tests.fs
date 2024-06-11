@@ -33,3 +33,10 @@ let ``Can access properties of generative provider 4`` () =
     Assert.That(obj.Property3, Is.EqualTo(3))
     Assert.That(obj.Property4, Is.EqualTo(4s))
 
+[<Test>]
+let ``Can use static method properly`` () =
+  let res1 = UniProtDemo.Static.Test<"hi">()
+  let res2 = UniProtDemo.Static.Test<"there">()
+  Assert.That(res1, Is.EqualTo("hi"))
+  Assert.That(res2, Is.EqualTo("there"))
+

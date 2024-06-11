@@ -98,3 +98,29 @@ type BasicGenerativeProvider (config : TypeProviderConfig) as this =
     do
         this.AddNamespace(ns, [myParamType])
 
+
+
+[<TypeProvider>]
+type UniProtProvider (config : TypeProviderConfig) as this =
+    inherit TypeProviderForNamespaces (config, assemblyReplacementMap=[("UniProtProvider.DesignTime", "UniProtProvider.Runtime")], addDefaultProbingLocation=true)
+
+    let ns = "UniProtDemo"
+    let asm = Assembly.GetExecutingAssembly()
+
+    // check we contain a copy of runtime files, and are not referencing the runtime DLL
+    do assert (typeof<DataSource>.Assembly.GetName().Name = asm.GetName().Name)  
+
+    let createTypes () =
+        let myType = ProvidedTypeDefinition(asm, ns, "Static", Some typeof<obj>)
+        let staticMeth = ProvidedMethod("Test", [], typeof<obj>, isStatic=true)
+        staticMeth.DefineStaticParameters([ProvidedStaticParameter("input", typeof<string>)], fun methName args ->
+          let s = args.[0] :?> string
+          let m = ProvidedMethod(methName, [], typeof<string>, isStatic=true, invokeCode = fun _ -> <@@ s @@>)
+          myType.AddMember(m)
+          m
+        )
+        myType.AddMember(staticMeth)
+        [myType]
+
+    do
+        this.AddNamespace(ns, createTypes())
